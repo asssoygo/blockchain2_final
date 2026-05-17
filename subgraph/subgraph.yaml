@@ -1,0 +1,68 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: GovernanceToken
+    network: arbitrum-sepolia
+    source:
+      address: "0x9Dc80829f5D95b8aBC89e2b2711Ce75Bfa6dDc67"
+      abi: GovernanceToken
+      startBlock: 130000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Token
+      abis:
+        - name: GovernanceToken
+          file: ./abis/GovernanceToken.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: DelegateChanged(indexed address,indexed address,indexed address)
+          handler: handleDelegateChanged
+      file: ./src/mappings/governanceToken.ts
+  - kind: ethereum
+    name: YieldVault
+    network: arbitrum-sepolia
+    source:
+      address: "0x10C38C37455084Bb060d7c385145b6039F99bb6b"
+      abi: YieldVault
+      startBlock: 130000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - VaultDeposit
+      abis:
+        - name: YieldVault
+          file: ./abis/YieldVault.json
+      eventHandlers:
+        - event: DepositWithReceipt(indexed address,indexed address,uint256,uint256)
+          handler: handleDeposit
+      file: ./src/mappings/yieldVault.ts
+  - kind: ethereum
+    name: ProtocolGovernor
+    network: arbitrum-sepolia
+    source:
+      address: "0x320E10Ab8531908dEb19927612EDD82fff3E9A79"
+      abi: ProtocolGovernor
+      startBlock: 130000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Proposal
+      abis:
+        - name: ProtocolGovernor
+          file: ./abis/ProtocolGovernor.json
+      eventHandlers:
+        - event: ProposalCreated(uint256,address,address[],uint256[],string[],bytes[],uint256,uint256,string)
+          handler: handleProposalCreated
+        - event: VoteCast(indexed address,uint256,uint8,uint256,string)
+          handler: handleVoteCast
+      file: ./src/mappings/governor.ts

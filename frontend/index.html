@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DeFi Super-App</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <div>
+        <h1>DeFi Super-App</h1>
+        <p>AMM + ERC-4626 Vault + DAO Governance on Arbitrum Sepolia</p>
+      </div>
+
+      <div class="wallet-panel">
+        <button id="connectBtn">Connect Wallet</button>
+        <button id="refreshBtn">Refresh Dashboard</button>
+        <p id="wallet">Wallet: not connected</p>
+        <p id="network">Network: -</p>
+      </div>
+    </header>
+
+    <section class="stats-grid">
+      <div class="stat-card">
+        <span>Governance Balance</span>
+        <strong id="statGovBalance">-</strong>
+      </div>
+      <div class="stat-card">
+        <span>Voting Power</span>
+        <strong id="statVotingPower">-</strong>
+      </div>
+      <div class="stat-card">
+        <span>Vault Assets</span>
+        <strong id="statVaultAssets">-</strong>
+      </div>
+      <div class="stat-card">
+        <span>Network</span>
+        <strong>Arbitrum Sepolia</strong>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Governance Token</h2>
+        <p id="govBalance">Balance: -</p>
+        <p id="votingPower">Voting Power: -</p>
+        <button id="loadGovBtn">Load Token Data</button>
+        <button id="delegateBtn">Delegate Votes</button>
+      </div>
+
+      <div class="card">
+        <h2>Vault</h2>
+        <p id="vaultAsset">Asset: -</p>
+        <p id="assetBalance">My Asset Balance: -</p>
+        <p id="totalAssets">Vault Total Assets: -</p>
+        <p id="shareBalance">My Shares: -</p>
+
+        <input id="vaultAmount" type="text" placeholder="Amount, e.g. 10" />
+        <div class="button-row">
+          <button id="loadVaultBtn">Load Vault</button>
+          <button id="approveVaultBtn">Approve</button>
+          <button id="depositVaultBtn">Deposit</button>
+          <button id="withdrawVaultBtn">Withdraw</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Game Items</h2>
+        <p id="goldBalance">Gold ID 1: -</p>
+        <p id="woodBalance">Wood ID 2: -</p>
+        <p id="ironBalance">Iron ID 3: -</p>
+        <p id="swordBalance">Sword ID 100: -</p>
+        <p id="shieldBalance">Shield ID 101: -</p>
+
+        <div class="hint">
+          Sword needs 10 GOLD + 5 IRON. Shield needs 15 WOOD + 5 IRON.
+        </div>
+
+        <button id="loadItemsBtn">Load Items</button>
+        <button id="craftSwordBtn">Craft Sword</button>
+        <button id="craftShieldBtn">Craft Shield</button>
+      </div>
+
+      <div class="card">
+        <h2>Governance</h2>
+        <p id="votingDelay">Voting Delay: -</p>
+        <p id="votingPeriod">Voting Period: -</p>
+        <p id="proposalThreshold">Proposal Threshold: -</p>
+        <button id="loadGovernorBtn">Load Governor</button>
+      </div>
+
+    <div class="card">
+        <h2>Proposals</h2>
+        <p class="hint">Enter a Proposal ID to check state and vote</p>
+        <input id="proposalIdInput" type="text" placeholder="Proposal ID (uint256)" />
+        <div class="button-row">
+          <button id="loadProposalBtn">Load State</button>
+          <button id="voteForBtn">Vote For</button>
+          <button id="voteAgainstBtn">Vote Against</button>
+          <button id="voteAbstainBtn">Abstain</button>
+        </div>
+        <p id="proposalState">State: -</p>
+        <p id="proposalVoted">Voted: -</p>
+      </div>
+      
+      <div class="card">
+        <h2>AMM Factory</h2>
+        <p id="factoryOwner">Owner: -</p>
+        <p id="firstPair">First Pair: -</p>
+
+        <input id="tokenAInput" type="text" placeholder="Token A address" />
+        <input id="tokenBInput" type="text" placeholder="Token B address" />
+
+        <button id="loadFactoryBtn">Load Factory</button>
+        <button id="createPairBtn">Create Pair</button>
+      </div>
+
+      <div class="card">
+        <h2>Transaction Log</h2>
+        <p id="status">Status: waiting...</p>
+        <div id="txLog" class="tx-log"></div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

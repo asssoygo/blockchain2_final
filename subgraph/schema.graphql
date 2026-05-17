@@ -1,0 +1,43 @@
+type Token @entity {
+  id: ID!
+  totalSupply: BigInt!
+  totalHolders: BigInt!
+  totalDelegated: BigInt!
+}
+
+type Swap @entity {
+  id: ID!
+  pair: String!
+  sender: Bytes!
+  amount0In: BigInt!
+  amount1In: BigInt!
+  amount0Out: BigInt!
+  amount1Out: BigInt!
+  to: Bytes!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+}
+
+type VaultDeposit @entity {
+  id: ID!
+  caller: Bytes!
+  receiver: Bytes!
+  assets: BigInt!
+  shares: BigInt!
+  timestamp: BigInt!
+  blockNumber: BigInt!
+}
+
+type Proposal @entity {
+  id: ID!
+  proposalId: BigInt!
+  proposer: Bytes!
+  description: String!
+  startBlock: BigInt!
+  endBlock: BigInt!
+  forVotes: BigInt!
+  againstVotes: BigInt!
+  abstainVotes: BigInt!
+  status: String!
+  timestamp: BigInt!
+}

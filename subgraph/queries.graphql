@@ -1,0 +1,74 @@
+# Query 1: Get governance token global stats
+query GetTokenStats {
+  token(id: "1") {
+    totalSupply
+    totalHolders
+    totalDelegated
+  }
+}
+
+# Query 2: Get the 10 most recent swaps across all AMM pairs
+query GetRecentSwaps {
+  swaps(first: 10, orderBy: timestamp, orderDirection: desc) {
+    id
+    pair
+    sender
+    amount0In
+    amount1In
+    amount0Out
+    amount1Out
+    to
+    timestamp
+    blockNumber
+  }
+}
+
+# Query 3: Get all vault deposits for a specific user address
+query GetUserDeposits($user: Bytes!) {
+  vaultDeposits(
+    where: { caller: $user }
+    orderBy: timestamp
+    orderDirection: desc
+  ) {
+    id
+    assets
+    shares
+    timestamp
+    blockNumber
+  }
+}
+
+# Query 4: Get all currently Active governance proposals with vote tallies
+query GetActiveProposals {
+  proposals(
+    where: { status: "Active" }
+    orderBy: timestamp
+    orderDirection: desc
+  ) {
+    id
+    proposalId
+    proposer
+    description
+    forVotes
+    againstVotes
+    abstainVotes
+    startBlock
+    endBlock
+  }
+}
+
+# Query 5: Get the 20 most recent proposals regardless of status
+query GetAllProposals {
+  proposals(first: 20, orderBy: timestamp, orderDirection: desc) {
+    id
+    proposalId
+    description
+    status
+    forVotes
+    againstVotes
+    abstainVotes
+    startBlock
+    endBlock
+    timestamp
+  }
+}
