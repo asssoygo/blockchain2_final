@@ -196,6 +196,15 @@ contract GameItems is ERC1155, Ownable, Pausable, ReentrancyGuard {
         super.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
+
+    /// @notice Demo helper function that lets any player mint basic resources.
+    /// @dev Used by the frontend demo so users can craft items without owner access.
+    function mintResources() external {
+    _mint(msg.sender, GOLD, 100, "");
+    _mint(msg.sender, WOOD, 100, "");
+    _mint(msg.sender, IRON, 100, "");
+}
+
     // ─── Crafting ─────────────────────────────────────────────────────────────
 
     /// @notice Burns the required resources from the caller's balance and mints a unique NFT.

@@ -1,23 +1,26 @@
 const ADDRESSES = {
-  governanceToken: "0x9Dc80829f5D95b8aBC89e2b2711Ce75Bfa6dDc67",
-  mockAsset: "0xa0CC573865B6800f9E9577b39B289FFe0cB7F8C9",
-  yieldVault: "0x10C38C37455084Bb060d7c385145b6039F99bb6b",
-  gameItems: "0x20a91c4E223f3670aCD6863B60c6aC9bFAa52de8",
-  governor: "0x320E10Ab8531908dEb19927612EDD82fff3E9A79",
-  ammFactory: "0xFD24fd97BD869819Dc77bc4bB92F28E8C3687353",
-  tokenA: "0x11A8E2B59f5a8E7C5C5b9A1698d860Bb42Dceb34",
-  tokenB: "0xe1c5c42fe18f2B96Ec22C5c02a8a900d6f16Be45"
+  governanceToken: "0xE6bBBdaEb26E87fA2314968c32cD52a96C81786c",
+  mockAsset: "0x4e2f79b60146b448000886eC66359f7E0A178917",
+  yieldVault: "0xB9981F61e74e9372f4762E481eeaF83B12f9e58f",
+  gameItems: "0x25F89B906864902dC1FEb9Af29dB5bbe5b43FE8c",
+  governor: "0x0fBAf76a66C88098e041ECeA523bA8485bB812FF",
+  ammFactory: "0x69fFE40A567a99a88552415743cEcB4CCCfe32c8",
+  tokenA: "0x5738B12c68834b46B5096d601898e3a15f7eB8F1",
+  tokenB: "0xb0e12AE4F115db9E4Cf3faecDf38dBfc7b397818"
 };
 
 const ARBITRUM_SEPOLIA_CHAIN_ID = "0x66eee";
 const EXPLORER = "https://sepolia.arbiscan.io/tx/";
+
+const TX_OVERRIDES = {};
 
 const erc20Abi = [
   "function balanceOf(address) view returns (uint256)",
   "function allowance(address,address) view returns (uint256)",
   "function approve(address,uint256) returns (bool)",
   "function decimals() view returns (uint8)",
-  "function symbol() view returns (string)"
+  "function symbol() view returns (string)",
+  "function mint(address,uint256)"
 ];
 
 const govTokenAbi = [
@@ -161,7 +164,7 @@ async function delegateVotes() {
     await ensureConnected();
 
     const token = new ethers.Contract(ADDRESSES.governanceToken, govTokenAbi, signer);
-    const tx = await token.delegate(userAddress);
+    const tx = await token.delegate(userAddress, TX_OVERRIDES);
 
     await waitTx(tx, "Delegate votes");
     await loadGovernanceData();
@@ -201,13 +204,31 @@ async function approveVault() {
     const amount = ethers.parseEther(amountText);
     const asset = new ethers.Contract(ADDRESSES.mockAsset, erc20Abi, signer);
 
-    const balance = await asset.balanceOf(userAddress);
+    let balance = await asset.balanceOf(userAddress);
+
+    if (balance < amount) {
+      setStatus("Minting test mUSD tokens...", "pending");
+      const mintTx = await asset.mint(
+        userAddress,
+        ethers.parseEther("1000000"),
+        TX_OVERRIDES
+      );
+
+      await waitTx(mintTx, "Mint mUSD");
+
+      balance = await asset.balanceOf(userAddress);
+    }
+    
     if (balance < amount) {
       setStatus("Not enough mUSD balance. Deposit cannot be executed.", "error");
       return;
     }
 
-    const tx = await asset.approve(ADDRESSES.yieldVault, amount);
+    const tx = await asset.approve(
+      ADDRESSES.yieldVault,
+      amount,
+      TX_OVERRIDES
+    );
     await waitTx(tx, "Approve vault");
   } catch (err) {
     handleError(err);
@@ -238,7 +259,11 @@ async function depositVault() {
     }
 
     const vault = new ethers.Contract(ADDRESSES.yieldVault, vaultAbi, signer);
-    const tx = await vault.deposit(amount, userAddress);
+    const tx = await vault.deposit(
+      amount,
+      userAddress,
+      TX_OVERRIDES
+    );
 
     await waitTx(tx, "Vault deposit");
     await loadVaultData();
@@ -265,11 +290,41 @@ async function withdrawVault() {
     }
 
     const vaultWithSigner = new ethers.Contract(ADDRESSES.yieldVault, vaultAbi, signer);
-    const tx = await vaultWithSigner.withdraw(amount, userAddress, userAddress);
+    const tx = await vaultWithSigner.withdraw(
+      amount,
+      userAddress,
+      userAddress,
+      TX_OVERRIDES
+    );
 
     await waitTx(tx, "Vault withdraw");
     await loadVaultData();
   } catch (err) {
+    handleError(err);
+  }
+}
+
+async function mintGameResources() {
+  try {
+    await ensureConnected();
+
+    const items = new ethers.Contract(
+      ADDRESSES.gameItems,
+      [
+        "function mintResources()",
+        "function balanceOf(address,uint256) view returns (uint256)"
+      ],
+      signer
+    );
+
+    const tx = await items.mintResources({
+      gasLimit: 1000000
+    });
+
+    await waitTx(tx, "Mint game resources");
+    await loadItems();
+  } catch (err) {
+    console.error("mintResources failed:", err);
     handleError(err);
   }
 }
@@ -308,7 +363,7 @@ async function craftSword() {
     }
 
     const items = new ethers.Contract(ADDRESSES.gameItems, erc1155Abi, signer);
-    const tx = await items.craft(100);
+    const tx = await items.craft(100, TX_OVERRIDES);
 
     await waitTx(tx, "Craft Sword");
     await loadItems();
@@ -331,7 +386,7 @@ async function craftShield() {
     }
 
     const items = new ethers.Contract(ADDRESSES.gameItems, erc1155Abi, signer);
-    const tx = await items.craft(101);
+    const tx = await items.craft(101, TX_OVERRIDES);
 
     await waitTx(tx, "Craft Shield");
     await loadItems();
@@ -387,7 +442,7 @@ async function createPair() {
     }
 
     const factory = new ethers.Contract(ADDRESSES.ammFactory, factoryAbi, signer);
-    const tx = await factory.createPair(tokenA, tokenB);
+    const tx = await factory.createPair(tokenA, tokenB, TX_OVERRIDES);
 
     await waitTx(tx, "Create AMM pair");
     await loadFactoryData();
@@ -438,7 +493,11 @@ async function castVote(support) {
     if (!id) return alert("Enter proposal ID");
 
     const governor = new ethers.Contract(ADDRESSES.governor, governorAbi, signer);
-    const tx = await governor.castVote(BigInt(id), support);
+    const tx = await governor.castVote(
+      BigInt(id),
+      support,
+      TX_OVERRIDES
+    );
     await waitTx(tx, `Vote ${["Against","For","Abstain"][support]}`);
     await loadProposalState();
   } catch (err) {
@@ -459,8 +518,10 @@ $("approveVaultBtn").addEventListener("click", approveVault);
 $("depositVaultBtn").addEventListener("click", depositVault);
 $("withdrawVaultBtn").addEventListener("click", withdrawVault);
 $("loadItemsBtn").addEventListener("click", loadItems);
+$("mintResourcesBtn").addEventListener("click", mintGameResources);
 $("craftSwordBtn").addEventListener("click", craftSword);
 $("craftShieldBtn").addEventListener("click", craftShield);
+
 $("loadGovernorBtn").addEventListener("click", loadGovernorData);
 $("loadFactoryBtn").addEventListener("click", loadFactoryData);
 $("createPairBtn").addEventListener("click", createPair);
