@@ -1,12 +1,12 @@
 const ADDRESSES = {
-  governanceToken: "0xE6bBBdaEb26E87fA2314968c32cD52a96C81786c",
-  mockAsset: "0x4e2f79b60146b448000886eC66359f7E0A178917",
-  yieldVault: "0xB9981F61e74e9372f4762E481eeaF83B12f9e58f",
-  gameItems: "0x25F89B906864902dC1FEb9Af29dB5bbe5b43FE8c",
-  governor: "0x0fBAf76a66C88098e041ECeA523bA8485bB812FF",
-  ammFactory: "0x69fFE40A567a99a88552415743cEcB4CCCfe32c8",
-  tokenA: "0x5738B12c68834b46B5096d601898e3a15f7eB8F1",
-  tokenB: "0xb0e12AE4F115db9E4Cf3faecDf38dBfc7b397818"
+  governanceToken: "0xAa6b1B53D078C8c573ADD945b76d64FaAF25f27e",
+  mockAsset: "0x3Ff8143a43C5a5bD585c073c6D3eDc1fA13Cd478",
+  yieldVault: "0xa99Ec6AE854ae741919Db84299eb708158f92476",
+  gameItems: "0xA3CCBBEf8804Ee1C8738f106b7adDAd255BEa12A",
+  governor: "0x72EE8337f3f94CeF17Ee0E08FB77957Dd132fAD1",
+  ammFactory: "0x6CeeB14cb6989e8342DD39ba55a875F58608Dc53",
+  tokenA: "0x8a3B7e9a3471D245401F59d28fAdfce7ad51B1d5",
+  tokenB: "0xF9519E5d1a87123880AB9d092c304AC8eA9B0AC0"
 };
 
 const ARBITRUM_SEPOLIA_CHAIN_ID = "0x66eee";
@@ -39,7 +39,8 @@ const vaultAbi = [
 
 const erc1155Abi = [
   "function balanceOf(address,uint256) view returns (uint256)",
-  "function craft(uint256)"
+  "function craft(uint256)",
+  "function mintResources()"
 ];
 
 const governorAbi = [
@@ -310,21 +311,35 @@ async function mintGameResources() {
 
     const items = new ethers.Contract(
       ADDRESSES.gameItems,
-      [
-        "function mintResources()",
-        "function balanceOf(address,uint256) view returns (uint256)"
-      ],
+      erc1155Abi,
       signer
     );
 
+    const code = await provider.getCode(ADDRESSES.gameItems);
+
+    if (code === "0x") {
+      setStatus("GameItems contract missing", "error");
+      return;
+    }
+
     const tx = await items.mintResources({
-      gasLimit: 1000000
+      gasLimit: 3000000
     });
 
     await waitTx(tx, "Mint game resources");
     await loadItems();
   } catch (err) {
     console.error("mintResources failed:", err);
+
+    if (
+      err?.message?.includes("execution reverted") ||
+      err?.shortMessage?.includes("execution reverted")
+    ) {
+      setStatus("GameItems contract reverted mintResources()", "error");
+      addLog("GameItems contract reverted mintResources()", null, "error");
+      return;
+    }
+
     handleError(err);
   }
 }
